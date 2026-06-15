@@ -27,19 +27,18 @@ enum userStates {
 }
 
 interface player {
-    id: string;
     websocket: WebSocket;
+    name?: string;
     availableMoves: availableMoves;
     currentOpponent?: string;
     state: userStates;
 }
 
-var players: player[] = [];
+var players: { [id: string]: player } = {};
 
 wss.on('connection', (ws: WebSocket) => {
     const playerId = uuidv4();
     const newPlayer: player = {
-        id: playerId,
         websocket: ws,
         availableMoves: {
             [Move.Rock]: true,
@@ -52,39 +51,109 @@ wss.on('connection', (ws: WebSocket) => {
         currentOpponent: undefined
     };
 
-    players.push(newPlayer);
+    players[playerId] = newPlayer;
     console.log(`Player connected: ${playerId}`);
-    ws.send(JSON.stringify({ type: 'welcome', playerId }));
-    
+    sendMessage(playerId, ServerMessage.welcome, playerId);
+
     ws.on('message', (message: string) => {
-        receivedMessage(playerId, JSON.parse(message));
+        receiveMessage(playerId, JSON.parse(message));
     });
 
     ws.on('close', () => {
         console.log(`Player disconnected: ${playerId}`);
         // Handle player disconnection here
-        players = players.filter(p => p.id !== playerId);
+        delete players[playerId];
     });
 });
 
 // Websockets that server will send
 enum ServerMessage {
-    gameStarted,
-    gameStateUpdate
+    welcome = 'welcome',
+    popup = 'popup',
+    challenge = 'challenge',
+    gameStarted = 'gameStarted',
+    gameStateUpdate = 'gameStateUpdate'
 }
 
 enum ClientMessage {
+    changeName = 'changeName',
     challengePlayer = 'challenge',
     acceptChallenge = 'acceptChallenge',
     makeMove = 'makeMove'
 }
 
-function receivedMessage(playerId: string, message: any) {
+async function receiveMessage(playerId: string, message: any) {
+    console.log(`Received message from ${playerId}:`, message);
+    
+    const player = players[playerId];
+    if (!player) {
+        console.warn(`Player ${playerId} not found`);
+        return;
+    }
+
+    switch (message.type) {
+        case ClientMessage.changeName:
+            console.log(`Player ${playerId} wants to change teir name to ${message.arg}`);
+            player.name = message.arg;
+            break;
+        case ClientMessage.challengePlayer:
+            console.log(`Player ${playerId} wants to challenge ${message.arg}`);
+            await handleChallenge(playerId, message.arg);
+            break;
+    }
+    //     case ClientMessage.challengePlayer:
+}
+
+async function handleChallenge(playerId: string, opponentId: string) {
+    const player = players[playerId];
+    const opponent = players[opponentId.trim()];
+    
+    if (!player || !opponent) {
+        console.warn(`Player or opponent not found: ${playerId}, ${opponentId}`);
+        sendMessage(playerId, ServerMessage.popup, 'Who the fuck you looking for????');
+        return;
+    }
+
+
+    player.state = userStates.Challenging;
+    player.currentOpponent = opponentId;
+    
+    if (opponent.state == userStates.Searching) {
+        opponent.state = userStates.Challenged;
+    } else {
+        sendMessage(playerId, ServerMessage.popup, 'Player is busy');
+        return;
+    }
+
+    var challengeData
+    if (player.name) {
+        challengeData = {
+            challenger: playerId,
+            message: `${player.name} has challenged you to a game!`
+        }
+    } else {
+        challengeData = {
+            challenger: playerId,
+            message: `${playerId} has challenged you to a game!`
+        }
+    };
+
+    sendMessage(opponentId, ServerMessage.challenge, challengeData);
+    while (opponent.state == userStates.Challenged) {
+        // Wait for opponent to accept or decline the challenge
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
 
 }
 
-function sendMessage(playerId: string, message: any) {
-
+function sendMessage(playerId: string, type: ServerMessage, arg: any) {
+    const player = players[playerId];
+    if (!player) {
+        console.warn(`Player ${playerId} not found`);
+        return;
+    }
+    player.websocket.send(JSON.stringify({ type, arg }));
 }
 
 console.log('WebSocket server is running on ws://localhost:8080');

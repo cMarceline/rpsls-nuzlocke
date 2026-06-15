@@ -18,9 +18,34 @@
         <p>as always, paper covers rock, rock crushes scissors, scissors cuts paper, paper disproves spock, spock vaporizes rock, rock crushes lizard, lizard poisons spock, spock smashes scissors, scissors decapitates lizard, and lizard eats paper.</p><br>
     </div>
 
-    <div class = "content">
-        // connect to server button
-        <button id="connect-btn">Connect to Server</button>
+    <br>
+
+    <div class = "content" id="inputs">
+        <h1>Change My Name</h1>
+        <input type="text" id="nameInput" placeholder="Enter your Name!">
+        <script>
+            document.getElementById('nameInput').addEventListener('change', () => {
+                const newName = document.getElementById('nameInput').value;
+                if (newName) {
+                    changeMyName(newName);
+                }
+            });
+        </script>
+        
+        <br>
+        <h1>My UUID is:</h1>
+        <p id="playerId">undefined</p>
+                
+        <br>
+        <h1>Challenge Player</h1>
+        <form onsubmit="event.preventDefault(); challengePlayer();"> 
+            <input type="text" id="opponentId" placeholder="Enter opponent's UUID!">
+            <button type="submit">Challenge</button>
+        </form>
+
+        <script>
+            document.getElementById('playerId').textContent = myUUID;
+        </script>
     </div>
 </body>
 </html>
