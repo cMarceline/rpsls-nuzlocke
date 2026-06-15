@@ -46,11 +46,9 @@ wss.on('connection', (ws: WebSocket) => {
     console.log(`Player connected: ${playerId}`);
     
     ws.on('message', (message: string) => {
-        switch (message) {
-            case 'createGame':
-                const game = createGame(playerId);
-                newPlayer.currentGame = game.id;
-                ws.send(JSON.stringify({ type: 'gameCreated', gameId: game.id }));
+        const msg = JSON.parse(message);
+        switch (msg.type) {
+            case ClientMessage.CreateGame:
                 break;
             // Add more cases for joining games, making moves, etc.
         }
@@ -60,8 +58,26 @@ wss.on('connection', (ws: WebSocket) => {
     ws.on('close', () => {
         console.log(`Player disconnected: ${playerId}`);
         // Handle player disconnection here
-        players.splice(players.findIndex(p => p.id === playerId), 1);
+        players = players.filter(p => p.id !== playerId);
     });
 });
+
+// Websockets that server will send
+enum ServerMessage {
+    gameStarted = 'gameCreated',
+    gameStateUpdate = 'gameStateUpdate',
+    
+}
+
+// Websockets that clients will send
+enum ClientMessage {
+    CreateGame = 'challengePlayer',
+    makeMove = 'makeMove',
+    MakeMove = 'makeMove'
+}
+
+function sendMessage(playerId: string, message: any) {
+
+}
 
 console.log('WebSocket server is running on ws://localhost:8080');
