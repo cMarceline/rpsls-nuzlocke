@@ -4,11 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 const wss = new WebSocketServer({ port: 8080 });
 
 enum Move {
-    Rock,
-    Paper,
-    Scissors,
-    Lizard,
-    Spock
+    Rock = 'rock',
+    Paper = 'paper',
+    Scissors = 'scissors',
+    Lizard = 'lizard',
+    Spock = 'spock'
 }
 
 interface availableMoves {
@@ -19,11 +19,19 @@ interface availableMoves {
     [Move.Spock]: boolean;
 }
 
+enum userStates {
+    Searching,
+    Challenging,
+    Challenged,
+    InGame
+}
+
 interface player {
     id: string;
     websocket: WebSocket;
     availableMoves: availableMoves;
     currentOpponent?: string;
+    state: userStates;
 }
 
 var players: player[] = [];
@@ -39,20 +47,17 @@ wss.on('connection', (ws: WebSocket) => {
             [Move.Scissors]: true,
             [Move.Lizard]: true,
             [Move.Spock]: true
-        }
+        },
+        state: userStates.Searching,
+        currentOpponent: undefined
     };
 
     players.push(newPlayer);
     console.log(`Player connected: ${playerId}`);
+    ws.send(JSON.stringify({ type: 'welcome', playerId }));
     
     ws.on('message', (message: string) => {
-        const msg = JSON.parse(message);
-        switch (msg.type) {
-            case ClientMessage.CreateGame:
-                break;
-            // Add more cases for joining games, making moves, etc.
-        }
-        // Handle incoming messages from clients here
+        receivedMessage(playerId, JSON.parse(message));
     });
 
     ws.on('close', () => {
@@ -64,16 +69,18 @@ wss.on('connection', (ws: WebSocket) => {
 
 // Websockets that server will send
 enum ServerMessage {
-    gameStarted = 'gameCreated',
-    gameStateUpdate = 'gameStateUpdate',
-    
+    gameStarted,
+    gameStateUpdate
 }
 
-// Websockets that clients will send
 enum ClientMessage {
-    CreateGame = 'challengePlayer',
-    makeMove = 'makeMove',
-    MakeMove = 'makeMove'
+    challengePlayer = 'challenge',
+    acceptChallenge = 'acceptChallenge',
+    makeMove = 'makeMove'
+}
+
+function receivedMessage(playerId: string, message: any) {
+
 }
 
 function sendMessage(playerId: string, message: any) {
