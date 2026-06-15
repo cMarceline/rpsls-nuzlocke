@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "dependencies": {
+    "uuid": "^14.0.0",
+    "ws": "^8.21.0"
+  }
+}

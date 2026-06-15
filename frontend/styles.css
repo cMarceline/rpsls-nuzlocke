@@ -1,0 +1,160 @@
+body {
+    background-repeat: repeat;
+    background-image : url("assets/backgrounds/Background.png"); 
+    background-size: 100% 100%;
+    min-height: 100vh;
+}  
+img {
+    display: block;
+    margin: auto;
+    width: 70%;
+} 
+
+/* The Header and navbar*/
+.header {
+    background-color: rgb(255, 255, 0);
+    padding: 20px;
+    text-align: center;
+    width : 70%;
+}
+.header img {
+    width: 100%;
+    height: 100px;
+}
+
+.navBar {
+    width: 90%;
+    height: 10%;
+    display: flex;
+    justify-content : center;
+    align-items: center;
+    padding: 10px;
+}
+
+.navBar img {
+    width: 100px;
+    margin: 0 10px;
+}
+
+
+/* Define Content */
+.content {
+    width: 1000px;
+    margin: auto;
+    padding: 20px;
+    background-image : url("assets/backgrounds/content-background.jpg");
+}
+
+/* for shenanigans */
+.content p,
+.content h1,
+.content h2 {
+    display: inline;
+}
+
+/* Basically the intro to any page */
+.explanation {
+    width: 1000px;
+    margin: auto;
+    padding: 20px;
+    background-image : url("assets/backgrounds/content-background.jpg");
+}
+
+
+
+a.epic_links{font-family: fantasy; font-size: 1em; font-weight: 100; text-decoration: none; line-height: normal;
+text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;}
+
+a.epic_links:link {Color: red}
+a.epic_links:visited {color: red}
+a.epic_links:hover {text-decoration: underline; font-weight: bolder}
+
+
+h1 {
+    color: red;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 52px;
+    text-align: center;
+    text-shadow: 
+        2px 0 #fff, 
+        -2px 0 #fff, 
+        0 2px #fff, 0 
+        -2px #fff,
+        1px 1px #fff, 
+        -1px -1px #fff, 
+        1px -1px #fff, 
+        -1px 1px #fff;
+}
+
+ul {
+    padding-left: 20px;
+    align-items: center;
+}
+
+p {
+    color: rgb(248, 255, 40);
+    font-family : 'Times New Roman', Times, serif;
+    font-size: 24px;
+    text-align: center;
+}
+.myBox {
+    background-color: rgb(255, 0, 0);
+    border: 2px solid black;
+    padding: 20px;
+    margin: 20px;
+    text-shadow : 2px 2px 4px #000000;
+}
+
+/* common sidebar tech */
+.sidebar {
+    width: 300px;
+    margin: auto;
+    padding: 20px;
+    background-color: aqua;
+}
+
+.sidebar h1 {
+    color: rgb(248, 255, 40);
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 52px;
+    text-align: center;
+    text-shadow: 
+        2px 0 #fff, 
+        -2px 0 #fff, 
+        0 2px #fff, 0 
+        -2px #fff,
+        1px 1px #fff, 
+        -1px -1px #fff, 
+        1px -1px #fff, 
+        -1px 1px #fff;
+}
+
+/* For the AOTD Sidebar */
+.albumSide {
+    background-color: black;
+    width: 64px;
+    height: 80px;
+}
+
+.albumSide img{
+    width : 64px;
+    height : 64px;
+}
+
+
+.albumSide h1 {
+    width: 64px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    font-size: 10px;
+    line-height: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-shadow: none;
+}
+
