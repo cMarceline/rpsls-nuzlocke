@@ -11,21 +11,6 @@ enum Move {
     Spock
 }
 
-interface player {
-    id: string;
-    ws: WebSocket;
-    currentGame: string | null;
-}
-
-interface gameInstance {
-    id: string;
-    host: string;
-    guest: string | null;
-    turnCount: number;
-    gameState: gameState;
-
-}
-
 interface availableMoves {
     [Move.Rock]: boolean;
     [Move.Paper]: boolean;
@@ -34,22 +19,27 @@ interface availableMoves {
     [Move.Spock]: boolean;
 }
 
-interface gameState {
-    host: availableMoves;
-    guest: availableMoves;
+interface player {
+    id: string;
+    websocket: WebSocket;
+    availableMoves: availableMoves;
+    currentOpponent?: string;
 }
 
-
-
-const players: player[] = [];
-const gameInstances: gameInstance[] = [];
+var players: player[] = [];
 
 wss.on('connection', (ws: WebSocket) => {
     const playerId = uuidv4();
     const newPlayer: player = {
         id: playerId,
-        ws: ws,
-        currentGame: null
+        websocket: ws,
+        availableMoves: {
+            [Move.Rock]: true,
+            [Move.Paper]: true,
+            [Move.Scissors]: true,
+            [Move.Lizard]: true,
+            [Move.Spock]: true
+        }
     };
 
     players.push(newPlayer);
@@ -75,30 +65,3 @@ wss.on('connection', (ws: WebSocket) => {
 });
 
 console.log('WebSocket server is running on ws://localhost:8080');
-
-function createGame(hostId: string): gameInstance {
-    const newGame: gameInstance = {
-        id: uuidv4(),
-        host: hostId,
-        guest: null,
-        turnCount: 0,
-        gameState: {
-            host: {
-                [Move.Rock]: true,
-                [Move.Paper]: true,
-                [Move.Scissors]: true,
-                [Move.Lizard]: true,
-                [Move.Spock]: true
-            },
-            guest: {
-                [Move.Rock]: true,
-                [Move.Paper]: true,
-                [Move.Scissors]: true,
-                [Move.Lizard]: true,
-                [Move.Spock]: true
-            }
-        }
-    };
-    gameInstances.push(newGame);
-    return newGame;
-}
