@@ -114,17 +114,6 @@ async function handleChallenge(playerId: string, opponentId: string) {
         return;
     }
 
-
-    player.state = userStates.Challenging;
-    player.currentOpponent = opponentId;
-    
-    if (opponent.state == userStates.Searching) {
-        opponent.state = userStates.Challenged;
-    } else {
-        sendMessage(playerId, ServerMessage.popup, 'Player is busy');
-        return;
-    }
-
     var challengeData
     if (player.name) {
         challengeData = {
@@ -138,13 +127,17 @@ async function handleChallenge(playerId: string, opponentId: string) {
         }
     };
 
-    sendMessage(opponentId, ServerMessage.challenge, challengeData);
-    while (opponent.state == userStates.Challenged) {
-        // Wait for opponent to accept or decline the challenge
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    player.state = userStates.Challenging;
+    player.currentOpponent = opponentId;
+    
+    if (opponent.state == userStates.Searching) {
+        opponent.state = userStates.Challenged;
+    } else {
+        sendMessage(playerId, ServerMessage.popup, 'Player is busy');
+        return;
     }
 
-
+    sendMessage(opponentId, ServerMessage.challenge, challengeData);
 }
 
 function sendMessage(playerId: string, type: ServerMessage, arg: any) {

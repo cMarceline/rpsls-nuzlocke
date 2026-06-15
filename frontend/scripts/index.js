@@ -39,23 +39,28 @@ function receiveMessage(message) {
     jsondata = JSON.parse(message);
     console.log('Parsed JSON data:', jsondata);
     switch (jsondata.type) {
+        
         case 'welcome':
             myUUID = jsondata.arg;
             console.log('Received welcome message, assigned UUID:', myUUID);
             document.getElementById('playerId').textContent = myUUID;
             break;
+
         case 'popup':
             alert(jsondata.arg);
             break;
+
         case 'challenge':
-            const accept = confirm(jsondata.arg);
+            const accept = confirm(jsondata.arg.message);
             if (accept) {
-                sendMessage('acceptChallenge');
+                sendMessage('acceptChallenge', jsondata.arg.challenger);
             } else {
-                sendMessage('declineChallenge');
+                sendMessage('declineChallenge', jsondata.arg.challenger);
             }
             break;
+
         default:
             console.warn('Unknown message type:', jsondata.type);
+
     }
 }
