@@ -10,28 +10,7 @@ export {
 
 const wss = new WebSocketServer({ port: 8080 });
 
-enum availableMoves {
-    Rock = 'rock',
-    Paper = 'paper',
-    Scissor = 'scissor',
-    Lizard = 'lizard',
-    Spock = 'spock'
-}
-
-interface player {
-    websocket: WebSocket;
-    name?: string;
-    lockedInMove? : availableMoves;
-    availableMoves? : availableMoves;
-}
-
-
-
-var connectingPlayers: { [id: string]: player } = {};
-var game: [player] = [];
-
 wss.on('connection', (ws: WebSocket) => {
-    gameModeration();
     const playerId = uuidv4();
     const newPlayer: player = {
         websocket: ws,
