@@ -33,7 +33,6 @@ user_wss.on('connection', (ws: WebSocket) => {
 
     const uuid = uuidv4()
     const newPlayer : Player = {
-        name: uuid,
         websocket: ws,
         locked: globalLock,
     }
