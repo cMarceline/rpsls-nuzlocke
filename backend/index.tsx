@@ -1,21 +1,19 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { setTimeout } from 'timers';
 import { v4 as uuidv4 } from 'uuid';
-const admin_wss = new WebSocketServer({ port: 8080 });
-const user_wss = new WebSocketServer({ port: 9090 });
+const admin_wss = new WebSocketServer({ port: 9090 });
+const user_wss = new WebSocketServer({ port: 8080 });
 
 export enum ServerMessage {
     whatTheFuck = 'what the fuck',
     lock = 'lock',
     unlock = 'unlock',
     reset = 'reset',
-    uuid = 'uuid',
 }
 
 enum ClientMessage {
     buzz = 'buzz',
     lockConfirmed = 'locked',
-    changeName = 'name',
     lock = 'lock',
     reset = 'reset',
 }
@@ -37,9 +35,10 @@ user_wss.on('connection', (ws: WebSocket) => {
         locked: globalLock,
     }
     players[uuid] = newPlayer
-    sendMessage(uuid, ServerMessage.uuid, uuid)
+    console.log(uuid + " connected!")
 
     ws.on('message', (message: string) => {
+        console.log(message)
         receiveMessage(uuid, JSON.parse(message))
     });
 
@@ -67,7 +66,7 @@ function sendMessage(playerId: string, type: ServerMessage, arg: any) {
 }
 
 async function receiveMessage(playerId: string, message: any) {
-    
+    console.log(message);
     if (!players[playerId]){
         return
     }
@@ -75,7 +74,8 @@ async function receiveMessage(playerId: string, message: any) {
     switch (message.type) {
         // User Messages
         case ClientMessage.buzz :
-            buzzQueue.push([message.time, message.name])
+            console.log([message.data.time, message.data.name])
+            buzzQueue.push([message.data.time, message.data.name])
             lock()
             break
         case ClientMessage.lockConfirmed : 
@@ -85,7 +85,8 @@ async function receiveMessage(playerId: string, message: any) {
             break
         // Admin Messages
         case ClientMessage.lock: 
-            console.log("Force Lock")
+            console.log("Force Lock");
+            break
         case ClientMessage.reset:
             console.log("reset!")
         //case ClientMessage.challengePlayer:
@@ -100,21 +101,23 @@ async function lock() {
     globalLock = true
     for (var player in players) {
         sendMessage(player, ServerMessage.lock, Date.now())
-
-        while (!(await isEveryoneLocked())) {
-            await sleep(100)
-        }
-
-        buzzQueue.sort((a, b) => a[0].getTime() - b[0].getTime());
-        // OBS Websocket
-        if (buzzQueue[0]) {
-            console.log(buzzQueue[0][1] + " Buzzed In First!" + "Runners Up" + buzzQueue);
-        } else {
-            console.log("No One Buzzed in!")
-        }
-
     }
+
+    while (!(await isEveryoneLocked())) {
+        console.log("waiting for everyone to lock up")
+        await sleep(100)
+    }
+
+    buzzQueue.sort((a, b) => a[0].getTime() - b[0].getTime());
+    // OBS Websocket
+    if (buzzQueue[0]) {
+        console.log(buzzQueue[0][1] + " Buzzed In First!" + "Runners Up" + buzzQueue);
+    } else {
+        console.log("No One Buzzed in!")
+    }
+
 }
+
 
 async function isEveryoneLocked(): Promise<Boolean> {
     return Object.values(players).every(player => player?.locked);

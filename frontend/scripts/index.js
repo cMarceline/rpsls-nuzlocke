@@ -12,56 +12,52 @@ socket.addEventListener('error', (event) => {
     console.error('WebSocket error', event);
 });
 
+const buzzer = document.getElementById("buzzer")
+
 // User Functions
-function changeMyName(newName) {
-    Cookies.set("myName", newName)
-    sendMessage('changeName', newName);
+buzzer.onclick = sendBuzz;
+function sendBuzz(){
+    var message = {
+        time : Date.now(),
+        name : document.getElementById("nameInput").value
+    }
+    sendMessage('buzz', message)
+    buzzer.disabled = true
 }
 
-function challengePlayer() {
-    const opponentId = document.getElementById('opponentId').value;
-    if (opponentId) {
-        sendMessage('challenge', opponentId);
-    } else {
-        alert('Please enter an opponent ID to challenge!');
-    }
-}
+// enum ClientMessage {
+//     buzz = 'buzz',
+//     lockConfirmed = 'locked',
+//     lock = 'lock',
+//     reset = 'reset',
+// }
 // Server Communication Functions
 function sendMessage(type, data) {
-    const message = JSON.stringify({ type, arg : data });
+    const message = JSON.stringify({ type, data });
     console.log('Sending message:', message);
     socket.send(message);
 }
 
+// enum ServerMessage {
+//     whatTheFuck = 'what the fuck',
+//     lock = 'lock',
+//     unlock = 'unlock',
+//     reset = 'reset',
+// }
 function receiveMessage(message) {
     console.log('Received message:', message);
     jsondata = JSON.parse(message);
     console.log('Parsed JSON data:', jsondata);
     switch (jsondata.type) {
-        case 'setUUID':
-            myUUID = jsondata.arg;
-            const oldUUID = Cookies.get('UUID')
-            if (oldUUID && oldUUID != myUUID) {
-                sendMessage('oldUUID', oldUUID);
-            }
-            Cookies.set('UUID', myUUID,{ expires: 1 })
-            console.log('Received welcome message, assigned UUID:', myUUID);
-            document.getElementById('playerId').textContent = myUUID;
-            break;
-
         case 'popup':
             alert(jsondata.arg);
             break;
-
-        case 'challenge':
-            const accept = confirm(jsondata.arg.message);
-            if (accept) {
-                sendMessage('acceptChallenge', jsondata.arg.challenger);
-            } else {
-                sendMessage('declineChallenge', jsondata.arg.challenger);
-            }
-            break;
-
+        case 'unlock':
+            buzzer.disabled = true 
+        case 'lock':
+            console.log("lock")
+            sendMessage("locked")
+            buzzer.disabled = true
         default:
             console.warn('Unknown message type:', jsondata.type);
 
