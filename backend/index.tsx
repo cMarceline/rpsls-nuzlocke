@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 const admin_wss = new WebSocketServer({ port: 9090 });
 const user_wss = new WebSocketServer({ port: 8080 });
 
-export enum ServerMessage {
+enum ServerMessage {
     whatTheFuck = 'what the fuck',
     lock = 'lock',
     unlock = 'unlock',
@@ -14,8 +14,12 @@ export enum ServerMessage {
 enum ClientMessage {
     buzz = 'buzz',
     lockConfirmed = 'locked',
+}
+
+enum adminMessages {
     lock = 'lock',
     reset = 'reset',
+    unlock = 'unlock',
 }
 
 interface Player {
@@ -37,24 +41,49 @@ user_wss.on('connection', (ws: WebSocket) => {
     players[uuid] = newPlayer
     console.log(uuid + " connected!")
 
+    if (globalLock) {
+        console.log("sending lock to " + uuid)
+        sendMessage(uuid, ServerMessage.lock, Date.now())
+    }
+
     ws.on('message', (message: string) => {
-        console.log(message)
         receiveMessage(uuid, JSON.parse(message))
     });
 
     ws.on('close', () => {
         delete(players[uuid])
+        console.log(uuid + " deleted :(")
     });
 });
 
 admin_wss.on('connection', (ws: WebSocket) => {
+    console.log("Admin Connected")
     ws.on('message', (message: string) => {
-        receiveMessage("admin", JSON.parse(message))
+        adminMessage(JSON.parse(message))
     });
     ws.on('close', () => {
     });
 });
 
+async function adminMessage(message: any) {
+    switch (message.type) {
+        case adminMessages.lock:
+            console.log("received lock command")
+            lock();
+            break
+        case adminMessages.unlock:
+            console.log("received unlock command");
+            globalLock = false;
+            for (var player in players) {
+                sendMessage(player, ServerMessage.unlock, Date.now());
+            }
+            break
+        case adminMessages.reset:
+            console.log("received reset command")
+            // OBS Websocket Delete
+            buzzQueue = []
+    }
+}
 
 function sendMessage(playerId: string, type: ServerMessage, arg: any) {
     const player = players[playerId];
@@ -65,8 +94,8 @@ function sendMessage(playerId: string, type: ServerMessage, arg: any) {
     player.websocket.send(JSON.stringify({ type, arg }));
 }
 
+
 async function receiveMessage(playerId: string, message: any) {
-    console.log(message);
     if (!players[playerId]){
         return
     }
@@ -83,13 +112,6 @@ async function receiveMessage(playerId: string, message: any) {
                 players[playerId].locked = true
             }
             break
-        // Admin Messages
-        case ClientMessage.lock: 
-            console.log("Force Lock");
-            break
-        case ClientMessage.reset:
-            console.log("reset!")
-        //case ClientMessage.challengePlayer:
     }
 }
 
@@ -111,7 +133,8 @@ async function lock() {
     buzzQueue.sort((a, b) => a[0].getTime() - b[0].getTime());
     // OBS Websocket
     if (buzzQueue[0]) {
-        console.log(buzzQueue[0][1] + " Buzzed In First!" + "Runners Up" + buzzQueue);
+        console.log(buzzQueue[0][1] + " Buzzed In First!");
+        console.log("runners up: " + buzzQueue)
     } else {
         console.log("No One Buzzed in!")
     }

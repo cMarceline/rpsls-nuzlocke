@@ -58,6 +58,10 @@ function receiveMessage(message) {
             console.log("lock")
             sendMessage("locked")
             buzzer.disabled = true
+
+        case 'unlock' :
+            buzzer.disabled = false
+
         default:
             console.warn('Unknown message type:', jsondata.type);
 
