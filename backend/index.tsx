@@ -4,94 +4,57 @@ import {
     gameModeration 
 } from './gameFunctions';
 
-export {
-    sendMessage
-}
-
+export {}
 const wss = new WebSocketServer({ port: 8080 });
 
-enum availableMoves {
-    Rock = 'rock',
-    Paper = 'paper',
-    Scissor = 'scissor',
-    Lizard = 'lizard',
-    Spock = 'spock'
-}
-
-interface player {
-    websocket: WebSocket;
-    name?: string;
-    lockedInMove? : availableMoves;
-    availableMoves? : availableMoves;
-}
-
-
-
-var connectingPlayers: { [id: string]: player } = {};
-var game: [player] = [];
-
-wss.on('connection', (ws: WebSocket) => {
-    gameModeration();
-    const playerId = uuidv4();
-    const newPlayer: player = {
-        websocket: ws,
-        currentOpponent: undefined
-    };
-
-    connectingPlayers[playerId] = newPlayer;
-    console.log(`Player connected: ${playerId}`);
-    sendMessage(playerId, ServerMessage.welcome, playerId);
-
-    ws.on('message', (message: string) => {
-        receiveMessage(playerId, JSON.parse(message));
-    });
-
-    ws.on('close', () => {
-        console.log(`Player disconnected: ${playerId}`);
-        // Handle player disconnection here
-        delete connectingPlayers[playerId];
-    });
-});
-
-// Websockets that server will send
-enum ServerMessage {
-    welcome = 'welcome',
-    popup = 'popup',
-    challenge = 'challenge',
-    gameStarted = 'gameStarted',
-    gameStateUpdate = 'gameStateUpdate'
+export enum ServerMessage {
+    whatTheFuck = 'what the fuck',
+    setUUID = 'setUUID'
 }
 
 enum ClientMessage {
+    olduuid = 'oldUUID',
     changeName = 'changeName',
     challengePlayer = 'challenge',
     acceptChallenge = 'acceptChallenge',
     makeMove = 'makeMove'
 }
 
-async function receiveMessage(playerId: string, message: any) {
-    console.log(`Received message from ${playerId}:`, message);
-    
-    const player = players[playerId];
-    if (!player) {
-        console.warn(`Player ${playerId} not found`);
-        return;
-    }
-
-    switch (message.type) {
-        case ClientMessage.changeName:
-            console.log(`Player ${playerId} wants to change teir name to ${message.arg}`);
-            player.name = message.arg;
-            break;
-        case ClientMessage.challengePlayer:
-            console.log(`Player ${playerId} wants to challenge ${message.arg}`);
-            await handleChallenge(playerId, message.arg);
-            break;
-    }
-    //     case ClientMessage.challengePlayer:
+interface player {
+    websocket: WebSocket;
+    name?: string;
+    gameID?: string;
 }
 
-function sendMessage(playerId: string, type: ServerMessage, arg: any) {
+var players: { [id: string]: player } = {}; 
+wss.on('connection', (ws: WebSocket) => {
+    const UUID = uuidv4
+    const setUUID = ServerMessage.setUUID
+    ws.websocket.send(JSON.stringify({ setUUID , UUID }));
+    
+
+    ws.on('message', (message: string) => {
+        receiveMessage(UUID, JSON.parse(message))
+    });
+
+    ws.on('close', () => {
+
+    });
+});
+
+async function receiveMessage(playerId: string, message: any) {
+    switch (message.type) {
+        case ClientMessage.olduuid :
+            const oldUUID = message.arg
+            if (players[oldUUID] && players[oldUUID].gameID) {
+                
+            }
+            return;
+        //case ClientMessage.challengePlayer:
+    }
+}
+
+export function sendMessage(playerId: string, type: ServerMessage, arg: any) {
     const player = players[playerId];
     if (!player) {
         console.warn(`Player ${playerId} not found`);

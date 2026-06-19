@@ -1,6 +1,4 @@
 const socket = new WebSocket('ws://localhost:8080');
-var myUUID = null;
-
 // WebSocket event handlers
 socket.addEventListener('open', () => {
     console.log('WebSocket connected');
@@ -16,6 +14,7 @@ socket.addEventListener('error', (event) => {
 
 // User Functions
 function changeMyName(newName) {
+    Cookies.set("myName", newName)
     sendMessage('changeName', newName);
 }
 
@@ -39,9 +38,13 @@ function receiveMessage(message) {
     jsondata = JSON.parse(message);
     console.log('Parsed JSON data:', jsondata);
     switch (jsondata.type) {
-        
-        case 'welcome':
+        case 'setUUID':
             myUUID = jsondata.arg;
+            const oldUUID = Cookies.get('UUID')
+            if (oldUUID && oldUUID != myUUID) {
+                sendMessage('oldUUID', oldUUID);
+            }
+            Cookies.set('UUID', myUUID,{ expires: 1 })
             console.log('Received welcome message, assigned UUID:', myUUID);
             document.getElementById('playerId').textContent = myUUID;
             break;
