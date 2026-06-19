@@ -48,8 +48,8 @@ function receiveMessage(message) {
     console.log('Received message:', message);
     const jsondata = JSON.parse(message);
     console.log('Parsed JSON data:', jsondata);
-
     const type = jsondata.type;
+    
     switch (type) {
         case "popup":
             alert(jsondata.arg ?? jsondata.data);
