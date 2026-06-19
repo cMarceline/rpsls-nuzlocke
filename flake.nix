@@ -21,7 +21,7 @@
       runner = pkgs.writeShellScriptBin "buzzer-backend" ''
         export PATH="${pkgs.bun}/bin:$PATH"
         echo "Starting User & Admin WebSocket servers via Bun..."
-        exec bun run ${./.}/index.tsx
+        exec bun run ./backend/index.tsx
       '';
     in {
       

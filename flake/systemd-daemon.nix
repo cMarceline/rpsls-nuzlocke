@@ -1,9 +1,6 @@
 { pkgs, src, ... }:
 
 {
-  # Open standard web ports in the firewall
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
-
   # Define the Backend Daemon via Systemd
   systemd.services.buzzer-backend = {
     description = "Buzzer App TypeScript Backend Server";
