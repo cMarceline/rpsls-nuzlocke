@@ -46,24 +46,27 @@ function sendMessage(type, data) {
 // }
 function receiveMessage(message) {
     console.log('Received message:', message);
-    jsondata = JSON.parse(message);
+    const jsondata = JSON.parse(message);
     console.log('Parsed JSON data:', jsondata);
-    switch (jsondata.type) {
-        case 'popup':
-            alert(jsondata.arg);
-            break;
-        case 'unlock':
-            buzzer.disabled = true 
-        case 'lock':
-            console.log("lock")
-            sendMessage("locked")
-            buzzer.disabled = true
 
-        case 'unlock' :
-            buzzer.disabled = false
+    const type = jsondata.type;
+    switch (type) {
+        case "popup":
+            alert(jsondata.arg ?? jsondata.data);
+            break;
+
+        case "lock":
+            console.log("lock");
+            buzzer.disabled = true;
+            sendMessage("locked");
+            break;
+
+        case "unlock":
+            console.log("unlock");
+            buzzer.disabled = false;
+            break;
 
         default:
-            console.warn('Unknown message type:', jsondata.type);
-
+            console.warn('Unknown message type:', type);
     }
 }

@@ -47,12 +47,5 @@
 
       packages.${system}.default = runner;
 
-      # Example target system configuration
-      nixosConfigurations.buzzerServer = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          self.nixosModules.buzzerApp
-        ];
-      };
     };
 }
