@@ -1,60 +1,64 @@
 import { WebSocketServer, WebSocket } from 'ws';
+import { setTimeout } from 'timers';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-    gameModeration 
-} from './gameFunctions';
-
-export {}
-const wss = new WebSocketServer({ port: 8080 });
+const admin_wss = new WebSocketServer({ port: 8080 });
+const user_wss = new WebSocketServer({ port: 9090 });
 
 export enum ServerMessage {
     whatTheFuck = 'what the fuck',
-    setUUID = 'setUUID'
+    lock = 'lock',
+    unlock = 'unlock',
+    reset = 'reset',
+    uuid = 'uuid',
 }
 
 enum ClientMessage {
-    olduuid = 'oldUUID',
-    changeName = 'changeName',
-    challengePlayer = 'challenge',
-    acceptChallenge = 'acceptChallenge',
-    makeMove = 'makeMove'
+    buzz = 'buzz',
+    lockConfirmed = 'locked',
+    changeName = 'name',
+    lock = 'lock',
+    reset = 'reset',
 }
 
-interface player {
-    websocket: WebSocket;
-    name?: string;
-    gameID?: string;
+interface Player {
+    websocket: WebSocket,
+    locked: Boolean,
 }
 
-var players: { [id: string]: player } = {}; 
-wss.on('connection', (ws: WebSocket) => {
-    const UUID = uuidv4
-    const setUUID = ServerMessage.setUUID
-    ws.websocket.send(JSON.stringify({ setUUID , UUID }));
-    
+var players: { [id: string]: Player } = {}
+var globalLock = false
+var buzzQueue: [Date, string][] = []
+
+user_wss.on('connection', (ws: WebSocket) => {
+
+    const uuid = uuidv4()
+    const newPlayer : Player = {
+        name: uuid,
+        websocket: ws,
+        locked: globalLock,
+    }
+    players[uuid] = newPlayer
+    sendMessage(uuid, ServerMessage.uuid, uuid)
 
     ws.on('message', (message: string) => {
-        receiveMessage(UUID, JSON.parse(message))
+        receiveMessage(uuid, JSON.parse(message))
     });
 
     ws.on('close', () => {
-
+        delete(players[uuid])
     });
 });
 
-async function receiveMessage(playerId: string, message: any) {
-    switch (message.type) {
-        case ClientMessage.olduuid :
-            const oldUUID = message.arg
-            if (players[oldUUID] && players[oldUUID].gameID) {
-                
-            }
-            return;
-        //case ClientMessage.challengePlayer:
-    }
-}
+admin_wss.on('connection', (ws: WebSocket) => {
+    ws.on('message', (message: string) => {
+        receiveMessage("admin", JSON.parse(message))
+    });
+    ws.on('close', () => {
+    });
+});
 
-export function sendMessage(playerId: string, type: ServerMessage, arg: any) {
+
+function sendMessage(playerId: string, type: ServerMessage, arg: any) {
     const player = players[playerId];
     if (!player) {
         console.warn(`Player ${playerId} not found`);
@@ -63,4 +67,64 @@ export function sendMessage(playerId: string, type: ServerMessage, arg: any) {
     player.websocket.send(JSON.stringify({ type, arg }));
 }
 
-console.log('WebSocket server is running on ws://localhost:8080');
+async function receiveMessage(playerId: string, message: any) {
+    
+    if (!players[playerId]){
+        return
+    }
+
+    switch (message.type) {
+        // User Messages
+        case ClientMessage.buzz :
+            buzzQueue.push([message.time, message.name])
+            lock()
+            break
+        case ClientMessage.lockConfirmed : 
+            if (players[playerId]) {
+                players[playerId].locked = true
+            }
+            break
+        // Admin Messages
+        case ClientMessage.lock: 
+            console.log("Force Lock")
+        case ClientMessage.reset:
+            console.log("reset!")
+        //case ClientMessage.challengePlayer:
+    }
+}
+
+async function lock() {
+    if (globalLock){
+        return
+    }
+
+    globalLock = true
+    for (var player in players) {
+        sendMessage(player, ServerMessage.lock, Date.now())
+
+        while (!(await isEveryoneLocked())) {
+            await sleep(100)
+        }
+
+        buzzQueue.sort((a, b) => a[0].getTime() - b[0].getTime());
+        // OBS Websocket
+        if (buzzQueue[0]) {
+            console.log(buzzQueue[0][1] + " Buzzed In First!" + "Runners Up" + buzzQueue);
+        } else {
+            console.log("No One Buzzed in!")
+        }
+
+    }
+}
+
+async function isEveryoneLocked(): Promise<Boolean> {
+    return Object.values(players).every(player => player?.locked);
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+console.log('User WebSocket server is running on ws://localhost:8080');
+console.log('Admin WebSocket server is running on ws://localhost:9090');
